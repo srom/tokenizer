@@ -11,7 +11,7 @@ import (
 // Ported from NLTK's implementation: http://www.nltk.org/_modules/nltk/tokenize/treebank.html
 //
 // Regexp initialization happens at first call of Tokenize(). You can initialize in advance by
-// creating the Tokenizer via NewTreebankWordTokenizer method or by calling Init() manually.
+// creating the Tokenizer via NewTreebankWordTokenizer method.
 type TreebankWordTokenizer struct {
 	initialized bool
 	steps       []step
@@ -23,7 +23,7 @@ type step struct {
 	Literal     bool
 }
 
-func (t *TreebankWordTokenizer) Init() {
+func (t *TreebankWordTokenizer) init() {
 	steps := make([]step, 0, 25)
 
 	// Starting quotes.
@@ -79,7 +79,7 @@ func (t *TreebankWordTokenizer) Init() {
 
 func (t *TreebankWordTokenizer) Tokenize(text string) []string {
 	if !(*t).initialized {
-		t.Init()
+		t.init()
 	}
 
 	_text := text
@@ -96,6 +96,6 @@ func (t *TreebankWordTokenizer) Tokenize(text string) []string {
 
 func NewTreebankWordTokenizer() *TreebankWordTokenizer {
 	t := new(TreebankWordTokenizer)
-	t.Init()
+	t.init()
 	return t
 }

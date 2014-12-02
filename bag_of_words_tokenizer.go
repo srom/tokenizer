@@ -5,17 +5,31 @@ import (
 	"io"
 	"os"
 	"regexp"
+	"strings"
 )
 
-var WORD_WITHOUT_LAST_PUNCT = regexp.MustCompile(`^(\w+)[^\w]?$`)
+type contraction struct {
+	Regexp      *regexp.Regexp
+	Replacement string
+}
+
+var wordWithoutLastPunct *regexp.Regexp = nil
+var commonContractions []contraction = nil
 
 type BagOfWordsTokenizer struct {
 	wordTokenizer *TreebankWordTokenizer
 	stopWords     map[string]struct{}
+	initalized    bool
 }
 
 func (t *BagOfWordsTokenizer) Tokenize(text string) []string {
-	words := (*t).wordTokenizer.Tokenize(text)
+	if !(*t).initalized {
+		panic("Initalize first by calling NewBagOfWordsTokenizer")
+	}
+	_text := t.preprocessing(text)
+
+	words := (*t).wordTokenizer.Tokenize(_text)
+
 	tokens := make([]string, 0, len(words))
 	for _, word := range words {
 		cleanWord := t.cleanupWord(word)
@@ -26,11 +40,40 @@ func (t *BagOfWordsTokenizer) Tokenize(text string) []string {
 	return tokens
 }
 
+func (t *BagOfWordsTokenizer) init(pathToStopWords string) {
+	f, err := os.Open(pathToStopWords)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+
+	wordWithoutLastPunct = regexp.MustCompile(`^(\pL+)[^\pL]?$`)
+	commonContractions = []contraction{
+		contraction{regexp.MustCompile("can't"), "can not"},
+		contraction{regexp.MustCompile("won't"), "will not"},
+		contraction{regexp.MustCompile(`([^' ])('[sS]) `), "${1} is "},
+		contraction{regexp.MustCompile(`([^' ])('[mM]) `), "${1} am "},
+		contraction{regexp.MustCompile(`([^' ])('[dD]) `), "${1} had "},
+	}
+	(*t).stopWords = loadStopWords(f)
+	(*t).wordTokenizer = NewTreebankWordTokenizer()
+	(*t).initalized = true
+}
+
+func (t *BagOfWordsTokenizer) preprocessing(text string) string {
+	_text := text
+	for _, commonContraction := range commonContractions {
+		_text = commonContraction.Regexp.ReplaceAllString(_text, commonContraction.Replacement)
+	}
+	return _text
+}
+
 func (t *BagOfWordsTokenizer) cleanupWord(word string) string {
-	if !WORD_WITHOUT_LAST_PUNCT.MatchString(word) {
+	if !wordWithoutLastPunct.MatchString(word) {
 		return ""
 	}
-	_word := WORD_WITHOUT_LAST_PUNCT.ReplaceAllString(word, "${1}")
+	_word := wordWithoutLastPunct.ReplaceAllString(word, "${1}")
+	_word = strings.ToLower(_word)
 	if _, isStopWord := (*t).stopWords[_word]; isStopWord {
 		return ""
 	}
@@ -38,15 +81,8 @@ func (t *BagOfWordsTokenizer) cleanupWord(word string) string {
 }
 
 func NewBagOfWordsTokenizer(pathToStopWords string) *BagOfWordsTokenizer {
-	f, err := os.Open("stop_words.txt")
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
-
 	t := new(BagOfWordsTokenizer)
-	(*t).stopWords = loadStopWords(f)
-	(*t).wordTokenizer = NewTreebankWordTokenizer()
+	t.init(pathToStopWords)
 	return t
 }
 
