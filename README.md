@@ -2,7 +2,9 @@
 
 Implementation of various natural language tokenizers in Go.
 
-WIP, so far it only contains an implementation of the Treebank word tokenizer.
+WIP. So far, we got:
+ * TreeBankWordTokenizer
+ * BagOfWordsTokenizer
 
 Documentation: http://godoc.org/github.com/srom/tokenizer
 
