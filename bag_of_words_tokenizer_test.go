@@ -34,8 +34,8 @@ func TestBagOfWordsTokenizer(t *testing.T) {
 			[]string{"hello", "romain"},
 		},
 	}
+	tokenizer := NewBagOfWordsTokenizer("fixtures/stop_words.txt")
 	for _, test_case := range cases {
-		tokenizer := NewBagOfWordsTokenizer("fixtures/stop_words.txt")
 		words := tokenizer.Tokenize(test_case.Input)
 		for i, word := range words {
 			if word != test_case.ExpectedOutput[i] {

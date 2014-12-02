@@ -39,8 +39,8 @@ func TestTreebankWordTokenizer(t *testing.T) {
 			[]string{"Hello", ",", "there", "!", "I", "'m", "Romain", "."},
 		},
 	}
+	tokenizer := NewTreebankWordTokenizer()
 	for _, test_case := range cases {
-		tokenizer := NewTreebankWordTokenizer()
 		words := tokenizer.Tokenize(test_case.Input)
 		for i, word := range words {
 			if word != test_case.ExpectedOutput[i] {
