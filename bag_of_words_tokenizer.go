@@ -16,15 +16,18 @@ type contraction struct {
 var wordWithoutLastPunct *regexp.Regexp = nil
 var commonContractions []contraction = nil
 
+// BagOfWordsTokenizer output a list of words suitable to be used to build a bag of words matrix.
+//
+// It uses a Treebank tokenizer internally but removes puncutation, and stopwords.
 type BagOfWordsTokenizer struct {
-	wordTokenizer *TreebankWordTokenizer
+	wordTokenizer Tokenizer
 	stopWords     map[string]struct{}
 	initalized    bool
 }
 
 func (t *BagOfWordsTokenizer) Tokenize(text string) []string {
 	if !(*t).initalized {
-		panic("Initalize first by calling NewBagOfWordsTokenizer")
+		panic("BagOfWordsTokenizer: Initalize first by calling NewBagOfWordsTokenizer")
 	}
 	_text := t.preprocessing(text)
 
